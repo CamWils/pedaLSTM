@@ -30,7 +30,7 @@ argparse.add_argument('--num_layers', '-nl', default=1, type=int)
 argparse.add_argument('--bias', '-b', default=True, type=bool)
 # Data & training
 argparse.add_argument('--sequence_length', '-sl', default=44100, type=int)
-argparse.add_argument('--epochs', '-ne', default=100, type=int)
+argparse.add_argument('--epochs', '-ne', default=10, type=int)
 argparse.add_argument('--val_freq', '--vf', default=2, type=int)
 argparse.add_argument('--val_patience', '-vp', default=20, type=int)
 argparse.add_argument('--batch_size', '-bs', default=50, type=int)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
         cuda = 1
     
     optimiser = torch.optim.Adam(pedaLSTM.parameters(), lr = args.learning_rate, weight_decay=args.weight_decay)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', factor=0.5, patience=5, verbose=True)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', factor=0.5, patience=5)
     loss_function = training.ESRLoss()
 
     # Data processing
@@ -161,15 +161,16 @@ if __name__ == "__main__":
     patience_count = 0
 
     for epoch in range(1, args.epochs + 1):
-        print('>>                   Training epoch: ' + str(epoch))
+        print('>> Training epoch: ' + str(epoch) + ' out of ' + str(args.epochs))
         epoch_loss = pedaLSTM.train_epoch(total_data.subsets['train'].data['input'][0],
                                           total_data.subsets['train'].data['target'][0],
                                           loss_function, optimiser, args.batch_size)
-        print('>>                   Trained epoch: ' + str(epoch))
+        #print('>>                   Trained epoch:  ' + str(epoch))
         if epoch % args.val_freq == 0:
             val_output, val_loss = pedaLSTM.process_data(total_data.subsets['val'].data['input'][0],
                                                          total_data.subsets['val'].data['target'][0], loss_function, args.chunk)
             scheduler.step(val_loss)
+            print(">> Validation loss: " + str(val_loss))
             if val_loss < min_val_loss:
                 patience_count = 0
                 #pedaLSTM.save_model('best', args.model_save_path)
