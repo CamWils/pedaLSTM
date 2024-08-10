@@ -18,20 +18,20 @@ from contextlib import nullcontext
 argparse = argparse.ArgumentParser()
 # File names & directories
 argparse.add_argument('--device', '-d', default='ts9', type=str)
-argparse.add_argument('--data_path', '-d_path', default='./audio32fp', type=str)
+argparse.add_argument('--data_path', '-d_path', default='./audio32fp_param', type=str)
 argparse.add_argument('--clean_audio_path', '-c_path', default='./audio32fp_split/ts9_in.wav', type=str)
 argparse.add_argument('--target_audio_path', '-t_path', default='./audio32fp/ts9_out_drive=05.wav', type=str)
 argparse.add_argument('--model_save_path', '-m_path', default='./models/', type=str)
 argparse.add_argument('--file_name', '-fn', default='ts9', type=str)
 # Model architecture
-argparse.add_argument('--input_size', '-is', default=1, type=int)
+argparse.add_argument('--input_size', '-is', default=2, type=int)
 argparse.add_argument('--output_size', '-os', default=1, type=int)
 argparse.add_argument('--hidden_size', '-hs', default=64, type=int)
 argparse.add_argument('--num_layers', '-nl', default=1, type=int)
 argparse.add_argument('--bias', '-b', default=True, type=bool)
 # Data & training
 argparse.add_argument('--sequence_length', '-sl', default=44100, type=int)
-argparse.add_argument('--epochs', '-ne', default=10, type=int)
+argparse.add_argument('--epochs', '-ne', default=1, type=int)
 argparse.add_argument('--val_freq', '--vf', default=2, type=int)
 argparse.add_argument('--val_patience', '-vp', default=20, type=int)
 argparse.add_argument('--batch_size', '-bs', default=50, type=int)
@@ -146,14 +146,16 @@ if __name__ == "__main__":
     # Data processing
     total_data = dataset.DataSet(data_dir=args.data_path)
 
+    total_data.create_subset('test')
+    total_data.load_file(os.path.join('test', args.file_name), 'test')
+
     total_data.create_subset('train', frame_len=44100)
     total_data.load_file(os.path.join('train', args.file_name), 'train')
 
     total_data.create_subset('val')
     total_data.load_file(os.path.join('val', args.file_name), 'val')
 
-    total_data.create_subset('test')
-    total_data.load_file(os.path.join('test', args.file_name), 'test')
+    
 
     pedaLSTM.save_state = True
     
